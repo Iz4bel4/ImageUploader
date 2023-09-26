@@ -9,7 +9,20 @@ from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
+    PermissionsMixin,
 )
+from django.contrib.postgres.fields import ArrayField
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+
+def graphic_image_file_path(instance, filename):
+    """Generate file path for new graphic image."""
+    extension = os.path.splitext(filename)[1]
+    filename = f"{uuid.uuid4()}{extension}"
+
+    return os.path.join("uploads", "graphic", filename)
+
+
 class UserManager(BaseUserManager):
     """Manager for users."""
 
