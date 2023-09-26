@@ -49,8 +49,21 @@ class UserManager(BaseUserManager):
 
 def get_default_thumbnail_heights_json():
     return {"heights": []}
+
+class Tier(models.Model):
+    """Tiers in the system."""
+    def __str__(self):
+        return self.name
+    
+
 class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
+
+    tier = models.ForeignKey(
+        Tier, 
+        on_delete=models.SET_NULL,
+        null = True
+    )
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
