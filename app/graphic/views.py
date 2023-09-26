@@ -64,3 +64,22 @@ class GraphicViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Create a new graphic."""
         serializer.save(user=self.request.user)
+class BaseGraphicAttrViewSet(
+    mixins.DestroyModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Base viewset for graphic attributes."""
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Filter queryset to authenticated user."""
+        assigned_only = bool(int(self.request.query_params.get("assigned_only", 0)))
+        queryset = self.queryset
+        if assigned_only:
+            queryset = queryset.filter(graphic__isnull=False)
+
+        return queryset.filter(user=self.request.user).order_by("-name").distinct()
