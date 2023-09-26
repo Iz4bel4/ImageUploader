@@ -55,3 +55,8 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+    def test_create_graphic(self):
+        """Test creating a graphic is successful."""
+
+    @patch("core.models.uuid.uuid4")
+    def test_graphic_file_name_uuid(self, mock_uuid):
