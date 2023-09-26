@@ -55,8 +55,18 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
     def test_create_graphic(self):
         """Test creating a graphic is successful."""
+        user = get_user_model().objects.create_user(
+            "test@example.com",
+            None,
+            "testpass123",
+        )
+        graphic = models.Graphic.objects.create(
+            user=user,
+        )
+        self.assertEqual(graphic.user, user)
 
     @patch("core.models.uuid.uuid4")
     def test_graphic_file_name_uuid(self, mock_uuid):
