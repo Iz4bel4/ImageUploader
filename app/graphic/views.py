@@ -32,3 +32,35 @@ class GraphicViewSet(viewsets.ModelViewSet):
     queryset = Graphic.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    def _params_to_ints(self, qs):
+        """Convert a list of strings to integers."""
+        return [int(str_id) for str_id in qs.split(",")]
+
+    def get_queryset(self):
+        """Retrieve graphics for authenticated user."""
+        queryset = self.queryset
+        return queryset.filter(user=self.request.user).order_by("-id").distinct()
+
+    def get_serializer_class(self):
+        """Return the serializer class for request."""
+        return self.serializer_class
+    
+    def create(self, request):
+        """New graphic creation with proper links managament"""     
+
+        # Basic create procedure
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        modifiedData = serializer.data
+
+        graphic = Graphic.objects.get(id=modifiedData["id"])
+        tier = graphic.user.tier
+        self.try_fill_with_links(tier, graphic, modifiedData)
+            
+        # All links should be packed and unpacked with protecting hash
+        return Response(modifiedData, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer):
+        """Create a new graphic."""
+        serializer.save(user=self.request.user)
