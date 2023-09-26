@@ -43,7 +43,12 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
+
         return user
+
+
+def get_default_thumbnail_heights_json():
+    return {"heights": []}
 class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
     email = models.EmailField(max_length=255, unique=True)
@@ -56,3 +61,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
 
 
+class Graphic(models.Model):
+    """Graphic object."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    image = models.ImageField(null=True, upload_to=graphic_image_file_path)
