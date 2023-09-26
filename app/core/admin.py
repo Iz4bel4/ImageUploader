@@ -23,6 +23,7 @@ class UserAdmin(BaseUserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
+                    "tier"
                 )
             },
         ),
@@ -42,6 +43,7 @@ class UserAdmin(BaseUserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
+                    "tier"
                 ),
             },
         ),
@@ -50,3 +52,4 @@ class UserAdmin(BaseUserAdmin):
 
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Graphic)
+admin.site.register(models.Tier)

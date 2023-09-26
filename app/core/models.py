@@ -52,6 +52,12 @@ def get_default_thumbnail_heights_json():
 
 class Tier(models.Model):
     """Tiers in the system."""
+
+    name = models.CharField(max_length=255, unique=True)
+    thumbnail_sizes = models.JSONField(default=get_default_thumbnail_heights_json)
+    returns_original_image_link = models.BooleanField(default=False)
+    returns_original_image_expiring_link = models.BooleanField(default=False)
+
     def __str__(self):
         return self.name
     
