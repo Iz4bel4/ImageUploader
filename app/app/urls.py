@@ -23,6 +23,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from graphic.views import ExpirationalLinkView 
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -34,6 +36,7 @@ urlpatterns = [
     ),
     path("api/user/", include("user.urls")),
     path("api/graphic/", include("graphic.urls")),
+    path('api/graphic/expirational-link/<str:expirational_link>/', ExpirationalLinkView.as_view(), name='expirational-link-view'),
 ]
 
 

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    'easy_thumbnails',
     "rest_framework.authtoken",
     "drf_spectacular",
     "core",
