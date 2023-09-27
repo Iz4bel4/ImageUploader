@@ -153,6 +153,18 @@ class PrivateGraphicApiTests(TestCase):
 
     def test_getting_thumbnail_image_link(self):
         """Test getting thumbnail image."""
+        other_user = create_user(email="other@example.com", tier=self.tier_thumbnail, password="test123")
+        graphic = create_graphic(user=other_user)
+
+        url = detail_url(graphic.id)
+        response = self.client.get(url)
+        self.assertTrue("thumbnail_200" in response.data)
 
     def test_not_getting_thumbnail_image_link(self):
         """Test not getting original image, as you don't have a tier to get one."""
+        other_user = create_user(email="other@example.com", tier=self.tier_nothing, password="test123")
+        graphic = create_graphic(user=other_user)
+
+        url = detail_url(graphic.id)
+        response = self.client.get(url)
+        self.assertFalse("image_200" in response.data)
