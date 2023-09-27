@@ -32,6 +32,8 @@ class GraphicViewSet(viewsets.ModelViewSet):
     queryset = Graphic.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    def try_adjust_original_link_presence(self, tier, data):
+        """Add/remove/update original image link"""
     def _params_to_ints(self, qs):
         """Convert a list of strings to integers."""
         return [int(str_id) for str_id in qs.split(",")]
