@@ -1,0 +1,65 @@
+[
+  {
+    "model": "core.tier",
+    "pk": 1,
+    "fields": {
+      "name": "Basic",
+      "thumbnail_sizes": {
+        "heights": [
+          200
+        ]
+      },
+      "returns_original_image_link": false,
+      "returns_original_image_expiring_link": false,
+      "is_undeleteable": true
+    }
+  },
+  {
+    "model": "core.tier",
+    "pk": 2,
+    "fields": {
+      "name": "Premium",
+      "thumbnail_sizes": {
+        "heights": [
+          200,
+          400
+        ]
+      },
+      "returns_original_image_link": true,
+      "returns_original_image_expiring_link": false,
+      "is_undeleteable": true
+    }
+  },
+  {
+    "model": "core.tier",
+    "pk": 3,
+    "fields": {
+      "name": "Enterprise",
+      "thumbnail_sizes": {
+        "heights": [
+          200,
+          400
+        ]
+      },
+      "returns_original_image_link": true,
+      "returns_original_image_expiring_link": true,
+      "is_undeleteable": true
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$320000$i9p0ysAxl64VbsOgkObdAy$3ctuz0x3/stZ4HTgAYcE8jJk8ZLrOb2UfL0dupbU9D8=",
+      "last_login": "2023-09-27T15:23:07.617Z",
+      "is_superuser": true,
+      "tier": 3,
+      "email": "admin@admin.com",
+      "name": "Admin",
+      "is_active": true,
+      "is_staff": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]    
