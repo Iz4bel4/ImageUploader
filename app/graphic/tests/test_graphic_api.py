@@ -47,6 +47,19 @@ def create_original_image_tier():
 def create_no_image_tier():
     """Create and return a new tier."""
     return Tier.objects.create(name="Test_nothing")
+class PublicGraphicAPITests(TestCase):
+    """Test unauthenticated API requests."""
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_auth_required(self):
+        """Test auth is required to call API."""
+        response = self.client.get(GRAPHICS_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
 class PrivateGraphicApiTests(TestCase):
     """Test authenticated API requests."""
 
@@ -63,3 +76,31 @@ class PrivateGraphicApiTests(TestCase):
             "testpass123",
         )
         self.client.force_authenticate(self.user)
+
+    def test_graphic_list_limited_to_user(self):
+        """Test list of graphics is limited to authenticated user."""
+        other_user = create_user(email="other@example.com", tier=self.tier, password="test123")
+
+        create_graphic(user=other_user)
+        create_graphic(user=self.user)
+        
+        response = self.client.get(GRAPHICS_URL)
+
+        graphics = Graphic.objects.filter(user=self.user).order_by("-id")
+        serializer = GraphicSerializer(graphics, many=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_get_multiple_graphics(self):
+        """Test get a list of graphics."""
+        create_graphic(user=self.user)
+        create_graphic(user=self.user)
+
+        response = self.client.get(GRAPHICS_URL)
+
+        graphics = Graphic.objects.all().order_by("-id")
+        serializer = GraphicSerializer(graphics, many=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
