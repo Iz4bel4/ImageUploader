@@ -50,10 +50,13 @@ class UserManager(BaseUserManager):
 def get_default_thumbnail_heights_json():
     return {"heights": []}
 
+
 class UndeleteableManager(models.Manager):
     """Adds ability to mark things as undeleteable"""
+
     def get_queryset(self):
         return super().get_queryset().filter(undeleteable=False)
+
 
 class Tier(models.Model):
     """Tiers in the system."""
@@ -69,13 +72,13 @@ class Tier(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     def delete(self, *args, **kwargs):
         if not self.is_undeleteable:
             super().delete(*args, **kwargs)
         else:
             print("Undeleteable records cannot be deleted.")
-    
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
@@ -84,13 +87,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         try:
             return Tier.objects.get(name="Basic")
         except Tier.DoesNotExist:
-            print("Basic tier is missing. It's unexpected behaviour. Setting tier to null.")
+            print(
+                "Basic tier is missing. It's unexpected behaviour. Setting tier to null."
+            )
 
-    tier = models.ForeignKey(
-        Tier, 
-        on_delete=set_default_tier,
-        null = True
-    )
+    tier = models.ForeignKey(Tier, on_delete=set_default_tier, null=True)
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)

@@ -7,15 +7,13 @@ from core.models import (
     Graphic,
 )
 
+
 class GraphicSerializer(serializers.ModelSerializer):
     """Serializer for graphics."""
 
     class Meta:
         model = Graphic
-        fields = [
-            "id",
-            "image"
-        ]
+        fields = ["id", "image"]
         read_only_fields = ["id"]
         extra_kwargs = {"image": {"required": "True"}}
 

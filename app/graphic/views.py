@@ -37,37 +37,37 @@ class GraphicViewSet(viewsets.ModelViewSet):
         """Thumbnail links"""
         if tier.thumbnail_sizes is None:
             return
-        
+
         thumbnail_heights = tier.thumbnail_sizes["heights"]
         if thumbnail_heights is None or not thumbnail_heights:
             return
-        
+
         if graphic.image is None or not graphic.image:
             for height in thumbnail_heights:
-                data['thumbnail_' + str(height)] = None
+                data["thumbnail_" + str(height)] = None
             return
-        
+
         ratio = graphic.image.height / graphic.image.width
         for height in thumbnail_heights:
-            options = {'size': (height, int(float(height) * ratio)), 'crop': True}
+            options = {"size": (height, int(float(height) * ratio)), "crop": True}
             thumb_url = get_thumbnailer(graphic.image).get_thumbnail(options).url
-            data['thumbnail_' + str(height)] = 'http://127.0.0.1:8000' + thumb_url
+            data["thumbnail_" + str(height)] = "http://127.0.0.1:8000" + thumb_url
 
     def try_delete_original_link(self, data):
-        if 'image' in data:
-            del data['image']
+        if "image" in data:
+            del data["image"]
 
     def try_adjust_original_link_presence(self, tier, data):
         """Add/remove/update original image link"""
-        if 'image' not in data:
+        if "image" not in data:
             return
-        
-        image_path = data['image']
+
+        image_path = data["image"]
         if not tier.returns_original_image_link:
             self.try_delete_original_link(data)
         elif image_path is not None:
-            if 'http://127.0.0.1:8000' not in image_path:
-                data['image'] = 'http://127.0.0.1:8000' + image_path
+            if "http://127.0.0.1:8000" not in image_path:
+                data["image"] = "http://127.0.0.1:8000" + image_path
 
     def change_link_to_expirational_link(self, tier, graphic, data, seconds_to_expire):
         """Expirational links"""
@@ -80,12 +80,15 @@ class GraphicViewSet(viewsets.ModelViewSet):
             # Sign the URL with the expiration time
             if graphic.image is None or not graphic.image:
                 return
-            
+
             link = str(graphic.image)
             expirational_link = signer.sign_object(
                 f"{link}:{expiration_time.timestamp()}"
-            )  
-            data['image'] = 'http://127.0.0.1:8000/api/graphic/expirational-link/' + expirational_link
+            )
+            data["image"] = (
+                "http://127.0.0.1:8000/api/graphic/expirational-link/"
+                + expirational_link
+            )
 
     def try_fill_with_links(self, tier, graphic, data):
         if tier is not None:
@@ -104,7 +107,7 @@ class GraphicViewSet(viewsets.ModelViewSet):
                 tier = graphic.user.tier
                 self.try_fill_with_links(tier, graphic, item)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     def retrieve(self, request, pk=None):
         try:
             graphic = Graphic.objects.get(pk=pk)
@@ -117,26 +120,43 @@ class GraphicViewSet(viewsets.ModelViewSet):
         self.try_fill_with_links(tier, graphic, modifiedData)
         return Response(modifiedData, status=status.HTTP_200_OK)
 
-    @action(methods=["GET"], detail=True, url_path="get-expirational-link/(?P<seconds_to_expire>[0-9]+)")
+    @action(
+        methods=["GET"],
+        detail=True,
+        url_path="get-expirational-link/(?P<seconds_to_expire>[0-9]+)",
+    )
     def get_image_expirational_link(self, request, pk=None, seconds_to_expire=None):
         """Return image expirational link with a certain time"""
         try:
             seconds_to_expire_int = int(seconds_to_expire)
         except ValueError:
-            return Response({"detail": "Invalid parameter. It must be an integer."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if (300 > seconds_to_expire_int or seconds_to_expire_int > 30000):
-            return Response({"detail": "Invalid value. Value must be between 300 and 30000."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"detail": "Invalid parameter. It must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if 300 > seconds_to_expire_int or seconds_to_expire_int > 30000:
+            return Response(
+                {"detail": "Invalid value. Value must be between 300 and 30000."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Expirational link
         graphic = Graphic.objects.get(id=pk)
         tier = graphic.user.tier
         if not tier.returns_original_image_expiring_link:
-            return Response({"detail": "User account tier is not authorized to get the expiring link."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {
+                    "detail": "User account tier is not authorized to get the expiring link."
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         serializer = self.get_serializer(graphic)
         modifiedData = serializer.data
-        self.change_link_to_expirational_link(tier, graphic, modifiedData, seconds_to_expire_int)
+        self.change_link_to_expirational_link(
+            tier, graphic, modifiedData, seconds_to_expire_int
+        )
 
         return Response(modifiedData, status=status.HTTP_200_OK)
 
@@ -152,9 +172,9 @@ class GraphicViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Return the serializer class for request."""
         return self.serializer_class
-    
+
     def create(self, request):
-        """New graphic creation with proper links managament"""     
+        """New graphic creation with proper links managament"""
 
         # Basic create procedure
         serializer = self.get_serializer(data=request.data)
@@ -165,7 +185,7 @@ class GraphicViewSet(viewsets.ModelViewSet):
         graphic = Graphic.objects.get(id=modifiedData["id"])
         tier = graphic.user.tier
         self.try_fill_with_links(tier, graphic, modifiedData)
-            
+
         # All links should be packed and unpacked with protecting hash
         return Response(modifiedData, status=status.HTTP_201_CREATED)
 
@@ -178,7 +198,9 @@ class ExpirationalLinkView(View):
     def get(self, request, expirational_link):
         try:
             signer = TimestampSigner()
-            original_url, expiration_timestamp = signer.unsign_object(expirational_link).split(':')
+            original_url, expiration_timestamp = signer.unsign_object(
+                expirational_link
+            ).split(":")
             original_url = "http://127.0.0.1:8000/static/media/" + original_url
 
             # Check if the link is still valid

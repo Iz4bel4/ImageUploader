@@ -18,14 +18,7 @@ class UserAdmin(BaseUserAdmin):
         (_("Personal Info"), {"fields": ("name",)}),
         (
             _("Permissions"),
-            {
-                "fields": (
-                    "is_active",
-                    "is_staff",
-                    "is_superuser",
-                    "tier"
-                )
-            },
+            {"fields": ("is_active", "is_staff", "is_superuser", "tier")},
         ),
         (_("Important dates"), {"fields": ("last_login",)}),
     )
@@ -43,12 +36,12 @@ class UserAdmin(BaseUserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
-                    "tier"
+                    "tier",
                 ),
             },
         ),
     )
-    
+
 
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Graphic)
