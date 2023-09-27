@@ -31,6 +31,11 @@ GRAPHICS_URL = reverse("graphic:graphic-list")
 def detail_url(graphic_id):
     """Create and return a graphic detail URL."""
     return reverse("graphic:graphic-detail", args=[graphic_id])
+
+def expirational_url(graphic_id, target_duration_seconds):
+    """Create and return a graphic detail URL."""
+    return reverse("graphic:graphic-get-image-expirational-link", args=[graphic_id, target_duration_seconds])
+
 def create_graphic(user):
     """Create and return a sample graphic."""
     graphic = Graphic.objects.create(user=user)
@@ -51,6 +56,12 @@ def create_no_image_tier():
 def create_thumbnail_image_tier():
     """Create and return a new tier."""
     return Tier.objects.create(name="Test_thumbnail", thumbnail_sizes={"heights": ["200"]})
+
+def create_expirational_image_tier():
+    """Create and return a new tier."""
+    return Tier.objects.create(name="Test_expirational", returns_original_image_expiring_link=True, )
+
+
 class PublicGraphicAPITests(TestCase):
     """Test unauthenticated API requests."""
 
@@ -168,3 +179,30 @@ class PrivateGraphicApiTests(TestCase):
         url = detail_url(graphic.id)
         response = self.client.get(url)
         self.assertFalse("image_200" in response.data)
+
+    def test_getting_expirational_image_link(self):
+        """Test getting expirational image link."""
+        other_user = create_user(email="other@example.com", tier=self.tier_expirational, password="test123")
+        graphic = create_graphic(user=other_user)
+
+        url = expirational_url(graphic.id, 600)
+        response = self.client.get(url)
+        self.assertTrue("image" in response.data)
+
+    def test_not_getting_expirational_image_link_because_of_tier(self):
+        """Test not getting expirational image link, as you don't have a tier to get one."""
+        other_user = create_user(email="other@example.com", tier=self.tier_nothing, password="test123")
+        graphic = create_graphic(user=other_user)
+
+        url = expirational_url(graphic.id, 600)
+        response = self.client.get(url)
+        self.assertFalse("image" in response.data)
+
+    def test_not_getting_expirational_image_link_because_of_wrong_value_range(self):
+        """Test not getting expirational image link, as you don't have a tier to get one."""
+        other_user = create_user(email="other@example.com", tier=self.tier_expirational, password="test123")
+        graphic = create_graphic(user=other_user)
+
+        url = expirational_url(graphic.id, 5)
+        response = self.client.get(url)
+        self.assertFalse("image" in response.data)
