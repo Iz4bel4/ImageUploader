@@ -24,6 +24,13 @@ from rest_framework.decorators import action
 from graphic import serializers
 from easy_thumbnails.files import get_thumbnailer
 
+image_key = "image"
+thumbnail_prefix = "thumbnail_"
+debug_host_link = "http://127.0.0.1:8000"
+static_media_link_prefix = debug_host_link + "/static/media/"
+expirational_link_prefix = debug_host_link + "/api/graphic/expirational-link/"
+min_expirational_link_duration_in_seconds = 300
+max_expirational_link_duration_in_seconds = 30000
 
 class GraphicViewSet(viewsets.ModelViewSet):
     """View for manage graphic APIs."""
@@ -44,30 +51,30 @@ class GraphicViewSet(viewsets.ModelViewSet):
 
         if graphic.image is None or not graphic.image:
             for height in thumbnail_heights:
-                data["thumbnail_" + str(height)] = None
+                data[thumbnail_prefix + str(height)] = None
             return
 
         ratio = graphic.image.height / graphic.image.width
         for height in thumbnail_heights:
             options = {"size": (height, int(float(height) * ratio)), "crop": True}
             thumb_url = get_thumbnailer(graphic.image).get_thumbnail(options).url
-            data["thumbnail_" + str(height)] = "http://127.0.0.1:8000" + thumb_url
+            data[thumbnail_prefix + str(height)] = debug_host_link + thumb_url
 
     def try_delete_original_link(self, data):
-        if "image" in data:
-            del data["image"]
+        if image_key in data:
+            del data[image_key]
 
     def try_adjust_original_link_presence(self, tier, data):
         """Add/remove/update original image link"""
-        if "image" not in data:
+        if image_key not in data:
             return
 
-        image_path = data["image"]
+        image_path = data[image_key]
         if not tier.returns_original_image_link:
             self.try_delete_original_link(data)
         elif image_path is not None:
-            if "http://127.0.0.1:8000" not in image_path:
-                data["image"] = "http://127.0.0.1:8000" + image_path
+            if debug_host_link not in image_path:
+                data[image_key] = debug_host_link + image_path
 
     def change_link_to_expirational_link(self, tier, graphic, data, seconds_to_expire):
         """Expirational links"""
@@ -82,12 +89,12 @@ class GraphicViewSet(viewsets.ModelViewSet):
                 return
 
             link = str(graphic.image)
-            expirational_link = signer.sign_object(
+            expirational_path = signer.sign_object(
                 f"{link}:{expiration_time.timestamp()}"
             )
-            data["image"] = (
-                "http://127.0.0.1:8000/api/graphic/expirational-link/"
-                + expirational_link
+            data[image_key] = (
+                expirational_link_prefix
+                + expirational_path
             )
 
     def try_fill_with_links(self, tier, graphic, data):
@@ -135,9 +142,9 @@ class GraphicViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if 300 > seconds_to_expire_int or seconds_to_expire_int > 30000:
+        if min_expirational_link_duration_in_seconds > seconds_to_expire_int or seconds_to_expire_int > max_expirational_link_duration_in_seconds:
             return Response(
-                {"detail": "Invalid value. Value must be between 300 and 30000."},
+                {"detail": "Invalid value. Value must be between " + str(min_expirational_link_duration_in_seconds) + " and " + str(max_expirational_link_duration_in_seconds) + "."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -201,7 +208,7 @@ class ExpirationalLinkView(View):
             original_url, expiration_timestamp = signer.unsign_object(
                 expirational_link
             ).split(":")
-            original_url = "http://127.0.0.1:8000/static/media/" + original_url
+            original_url = static_media_link_prefix + original_url
 
             # Check if the link is still valid
             expiration_time = datetime.fromtimestamp(float(expiration_timestamp))
