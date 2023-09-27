@@ -120,6 +120,14 @@ class GraphicViewSet(viewsets.ModelViewSet):
             graphic = Graphic.objects.get(pk=pk)
         except Graphic.DoesNotExist:
             return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if graphic.user != self.request.user:
+            return Response(
+                {
+                    "detail": "User doesn't have access to another user images."
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         serializer = self.serializer_class(graphic)
         modifiedData = serializer.data
@@ -150,6 +158,15 @@ class GraphicViewSet(viewsets.ModelViewSet):
 
         # Expirational link
         graphic = Graphic.objects.get(id=pk)
+
+        if graphic.user != self.request.user:
+            return Response(
+                {
+                    "detail": "User doesn't have access to another user images."
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
         tier = graphic.user.tier
         if not tier.returns_original_image_expiring_link:
             return Response(
