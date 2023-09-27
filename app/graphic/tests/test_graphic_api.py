@@ -47,6 +47,10 @@ def create_original_image_tier():
 def create_no_image_tier():
     """Create and return a new tier."""
     return Tier.objects.create(name="Test_nothing")
+
+def create_thumbnail_image_tier():
+    """Create and return a new tier."""
+    return Tier.objects.create(name="Test_thumbnail", thumbnail_sizes={"heights": ["200"]})
 class PublicGraphicAPITests(TestCase):
     """Test unauthenticated API requests."""
 
@@ -129,3 +133,26 @@ class PrivateGraphicApiTests(TestCase):
         self.assertEqual(graphic.user, self.user)
         self.assertIn("image", response.data)
         self.assertTrue(os.path.exists(graphic.image.path))
+
+    def test_getting_original_image_link(self):
+        """Test getting original image."""
+        graphic = create_graphic(user=self.user)
+
+        url = detail_url(graphic.id)
+        response = self.client.get(url)
+        self.assertTrue("image" in response.data)
+
+    def test_not_getting_original_image_link(self):
+        """Test not getting original image, as you don't have a tier to get one."""
+        other_user = create_user(email="other@example.com", tier=self.tier_nothing, password="test123")
+        graphic = create_graphic(user=other_user)
+
+        url = detail_url(graphic.id)
+        response = self.client.get(url)
+        self.assertFalse("image" in response.data)
+
+    def test_getting_thumbnail_image_link(self):
+        """Test getting thumbnail image."""
+
+    def test_not_getting_thumbnail_image_link(self):
+        """Test not getting original image, as you don't have a tier to get one."""
