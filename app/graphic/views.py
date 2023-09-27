@@ -32,6 +32,26 @@ class GraphicViewSet(viewsets.ModelViewSet):
     queryset = Graphic.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
+    def try_fill_with_thumbnail_links(self, tier, graphic, data):
+        """Thumbnail links"""
+        if tier.thumbnail_sizes is None:
+            return
+        
+        thumbnail_heights = tier.thumbnail_sizes["heights"]
+        if thumbnail_heights is None or not thumbnail_heights:
+            return
+        
+        if graphic.image is None or not graphic.image:
+            for height in thumbnail_heights:
+                data['thumbnail_' + str(height)] = None
+            return
+        
+        ratio = graphic.image.height / graphic.image.width
+        for height in thumbnail_heights:
+            options = {'size': (height, int(float(height) * ratio)), 'crop': True}
+            thumb_url = get_thumbnailer(graphic.image).get_thumbnail(options).url
+            data['thumbnail_' + str(height)] = 'http://127.0.0.1:8000' + thumb_url
     def try_adjust_original_link_presence(self, tier, data):
         """Add/remove/update original image link"""
     def _params_to_ints(self, qs):
