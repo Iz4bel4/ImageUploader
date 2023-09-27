@@ -104,3 +104,28 @@ class PrivateGraphicApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
+    def test_get_single_graphic(self):
+        """Test get graphic."""
+        graphic = create_graphic(user=self.user)
+
+        url = detail_url(graphic.id)
+        response = self.client.get(url)
+
+        serializer = GraphicSerializer(graphic)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_create_graphic(self):
+        """Test creating a graphic."""
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as image_file:
+            img = Image.new("RGB", (10, 10))
+            img.save(image_file, format="JPEG")
+            image_file.seek(0)
+            payload = {"image": image_file}
+            response = self.client.post(GRAPHICS_URL, payload, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        graphic = Graphic.objects.get(id=response.data["id"])
+        self.assertEqual(graphic.user, self.user)
+        self.assertIn("image", response.data)
+        self.assertTrue(os.path.exists(graphic.image.path))
